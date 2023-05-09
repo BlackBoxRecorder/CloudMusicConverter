@@ -175,35 +175,46 @@ namespace CloudMusicConverter
 
         public async void Start()
         {
-
             string lbTotal = $"找到 {AllNCMFiles.Count} 个ncm文件";
             LabelTotal.Text = lbTotal;
             LabelFilename.Text = "";
 
-            int count = 0;
+            int count = 1;
             IsConverting = true;
             int errCount = 0;
             foreach (string file in AllNCMFiles)
             {
                 if (!IsConverting) return;
-
-                var _processing = new FileInfo(file);
-
+                await Task.Delay(50);
                 try
                 {
-                    var fs = _processing.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+                    var filename = Path.GetFileNameWithoutExtension(file);
+                    if (ConvertedFiles.Exists(c => c.Contains(filename)))
+                    {
+                        count++;
+                        continue;
+                    }
 
+                    var _processing = new FileInfo(file);
+                    var fullpath = _processing.DirectoryName;
+                    var subDir = fullpath.Replace(Dir, "");
+
+
+                    var fs = _processing.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+                    var resdir = ResultDir + subDir;
+                    if (!Directory.Exists(resdir))
+                    {
+                        Directory.CreateDirectory(resdir);
+                    }
                     NeteaseCrypto neteaseFile = new NeteaseCrypto(fs)
                     {
-                        FileName = Path.GetFileNameWithoutExtension(file),
-                        FullFilePath = ResultDir,
+                        FileName = filename,
+                        FullFilePath = resdir,
                         FullFileName = file
                     };
 
                     LabelTotal.Text = lbTotal + $"，正在转换第{count}个";
                     LabelFilename.Text = Path.GetFileNameWithoutExtension(file);
-                    //skip exist file
-
 
                     try
                     {
@@ -213,19 +224,21 @@ namespace CloudMusicConverter
                     {
                         count++;
                         neteaseFile.CloseFile();
-                        await Task.Delay(5000);
                     }
-
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     errCount++;
                     LbErrMsg.Text = $"{errCount}个文件转换失败";
-                    LbErrMsg.ToolTipText = file;
+                    LbErrMsg.ToolTipText = ex.Message;
                 }
             }
 
             IsConverting = false;
+
+            var stat = GetDirStat(ResultDir);
+            LabelTotal.Text = stat;
+
             LabelFilename.Text = "全部转换完成，可以打开文件夹了！";
 
             BtnStart.Enabled = true;
@@ -273,6 +286,39 @@ namespace CloudMusicConverter
             {
 
             }
+        }
+
+
+        /// <summary>
+        /// 获取文件个数和文件夹大小
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <returns></returns>
+        private string GetDirStat(string dir)
+        {
+            try
+            {
+                var files = new List<string>();
+                FindFiles(new DirectoryInfo(dir), ref files,
+                    new List<string> { MP3_FILE_EXTENSION, FLAC_FILE_EXTENSION });
+
+                long totalSize = 0;
+
+                foreach (var file in files)
+                {
+                    var fi = new FileInfo(file);
+                    totalSize += fi.Length;
+                }
+
+                return $"已转换文件共{files.Count}个，占用{totalSize / 1024 / 1024}Mb";
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return string.Empty;
         }
     }
 }
