@@ -33,8 +33,11 @@ namespace CloudMusicConverter
         private string ResultDir = "";
 
         private const string NCM_FILE_EXTENSION = ".ncm";
-        readonly List<string> AllNCMFiles = new List<string>();
-        readonly List<string> ConvertedFiles = new List<string>();
+        private const string MP3_FILE_EXTENSION = ".mp3";
+        private const string FLAC_FILE_EXTENSION = ".flac";
+
+        List<string> AllNCMFiles = new List<string>();
+        List<string> ConvertedFiles = new List<string>();
 
 
         private void FilePanel_DragDrop(object sender, DragEventArgs e)
@@ -47,41 +50,43 @@ namespace CloudMusicConverter
 
                 if (aryFiles.Length > 1)
                 {
-                    throw new Exception("请拖放单个文件夹！");
+                    throw new InvalidDataException("请拖放单个文件夹！");
                 }
 
-                if (aryFiles.Length == 1)
-                {
-                    Dir = aryFiles.GetValue(0).ToString();
-                    if (!Directory.Exists(Dir))
-                    {
-                        throw new DirectoryNotFoundException();
-                    }
-
-                    AllNCMFiles.Clear();
-
-                    FindFiles(new DirectoryInfo(Dir));
-
-                    LabelTotal.Text = $"找到 {AllNCMFiles.Count} 个ncm文件";
-                    LabelFilename.Text = "";
-                    LbErrMsg.Text = "";
-
-                    ResultDir = Path.Combine(Dir, "已转换");
-
-                    if (!Directory.Exists(ResultDir))
-                    {
-                        Directory.CreateDirectory(ResultDir);
-                    }
-                    else
-                    {
-
-                    }
-                }
-                else
+                if (aryFiles.Length != 1)
                 {
                     throw new InvalidDataException("文件夹拖放错误");
                 }
 
+                Dir = aryFiles.GetValue(0).ToString();
+                if (!Directory.Exists(Dir))
+                {
+                    throw new DirectoryNotFoundException("文件夹不存在");
+                }
+
+                AllNCMFiles.Clear();
+                ConvertedFiles.Clear();
+
+                FindFiles(new DirectoryInfo(Dir), ref AllNCMFiles, new List<string>() { NCM_FILE_EXTENSION });
+
+                LabelTotal.Text = $"找到 {AllNCMFiles.Count} 个ncm文件";
+                LabelFilename.Text = "";
+                LbErrMsg.Text = "";
+
+                ResultDir = Path.Combine(Dir, "已转换");
+
+                if (!Directory.Exists(ResultDir))
+                {
+                    Directory.CreateDirectory(ResultDir);
+                }
+                else
+                {
+                    //查找目录下所有文件
+                    FindFiles(new DirectoryInfo(ResultDir), ref ConvertedFiles,
+                        new List<string>() { MP3_FILE_EXTENSION, FLAC_FILE_EXTENSION });
+                    LabelFilename.Text = $"已有{ConvertedFiles.Count}个转换完成。";
+
+                }
             }
             catch (Exception ex)
             {
@@ -100,7 +105,6 @@ namespace CloudMusicConverter
         {
             try
             {
-
                 if (!Directory.Exists(Dir) || AllNCMFiles.Count < 1)
                 {
                     throw new DirectoryNotFoundException("未找到.ncm文件");
@@ -229,19 +233,17 @@ namespace CloudMusicConverter
             BtnOpen.Enabled = true;
         }
 
-
-        public void FindFiles(DirectoryInfo di)
+        public void FindFiles(DirectoryInfo di, ref List<string> result, List<string> extensions)
         {
-
             try
             {
                 FileInfo[] fis = di.GetFiles();
 
                 for (int i = 0; i < fis.Length; i++)
                 {
-                    if (fis[i].Extension.Contains(NCM_FILE_EXTENSION))
+                    if (extensions.Contains(fis[i].Extension))
                     {
-                        AllNCMFiles.Add(fis[i].FullName);
+                        result.Add(fis[i].FullName);
                         Console.WriteLine("文件：" + fis[i].FullName);
                     }
                 }
@@ -249,7 +251,7 @@ namespace CloudMusicConverter
                 DirectoryInfo[] dis = di.GetDirectories();
                 for (int j = 0; j < dis.Length; j++)
                 {
-                    FindFiles(dis[j]);
+                    FindFiles(dis[j], ref result, extensions);
                 }
 
             }
