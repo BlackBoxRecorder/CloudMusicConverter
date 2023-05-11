@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.FilePanel = new System.Windows.Forms.Panel();
             this.LabelTotal = new System.Windows.Forms.Label();
             this.BtnStart = new System.Windows.Forms.Button();
@@ -117,7 +118,7 @@
             // 
             this.LbErrMsg.BackColor = System.Drawing.SystemColors.Control;
             this.LbErrMsg.Name = "LbErrMsg";
-            this.LbErrMsg.Size = new System.Drawing.Size(179, 17);
+            this.LbErrMsg.Size = new System.Drawing.Size(210, 17);
             this.LbErrMsg.Spring = true;
             this.LbErrMsg.Text = "error message";
             this.LbErrMsg.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -143,6 +144,7 @@
             this.Controls.Add(this.BtnStart);
             this.Controls.Add(this.LabelTotal);
             this.Controls.Add(this.FilePanel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MainForm";
