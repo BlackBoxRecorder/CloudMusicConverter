@@ -45,6 +45,8 @@
             // 
             this.FilePanel.AllowDrop = true;
             this.FilePanel.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.FilePanel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("FilePanel.BackgroundImage")));
+            this.FilePanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.FilePanel.Location = new System.Drawing.Point(12, 12);
             this.FilePanel.Name = "FilePanel";
             this.FilePanel.Size = new System.Drawing.Size(300, 47);
